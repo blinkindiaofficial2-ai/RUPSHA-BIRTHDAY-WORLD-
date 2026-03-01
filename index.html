@@ -5,7 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Birthday Countdown - Feb 11</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
     <style>
+    
+    
+    
     /* টাচ পার্টিকেল স্টাইল */
 .m-particle {
     position: fixed; 
@@ -56,6 +62,8 @@
             position:fixed !important;
         }
 
+    
+    
         /* লোগো সেকশন - হেডারের ঠিক নিচে */
         .logo-under-header {
             position: fixed;
@@ -149,19 +157,52 @@
             100% { transform: translate3d(0, -150vh, 0); opacity: 0; }
         }
 
-        /* ৩. মেনু কন্টেইনার */
-        .container {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.03); 
-            padding: 40px 30px;
-            border-radius: 25px;
-            border: 1px solid rgba(255, 46, 126, 0.2);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
-            z-index: 10;
-            position: relative;
-        }
+        /* ১. এনিমেশন তৈরি করা */
+@keyframes borderRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ২. কন্টেইনার স্টাইল */
+.container {
+    position: relative;
+    text-align: center;
+    padding: 40px 30px;
+    background: rgba(255, 255, 255, 0.05); /* গ্লাস ইফেক্ট */
+    border-radius: 25px;
+    overflow: hidden; /* বাইরের অংশ কেটে ফেলার জন্য */
+    z-index: 10;
+}
+
+/* ৩. চিকন আলোর রেখা (যা ঘুরবে) */
+.container::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        transparent, 
+        transparent, 
+        transparent, 
+        #ff2e7e, /* আপনার পছন্দের পিঙ্ক কালার */
+        transparent
+    );
+    animation: borderRotate 4s linear infinite; /* ৪ সেকেন্ডে একবার ঘুরবে */
+    z-index: -2;
+}
+
+/* ৪. ভেতরের কালো অংশ (যাতে আলোটা শুধু বর্ডারে দেখা যায়) */
+.container::after {
+    content: "";
+    position: absolute;
+    inset: 3px; /* বর্ডারের পুরুত্ব ৩ পিক্সেল */
+    background: #0d0d0d; /* আপনার ব্যাকগ্রাউন্ডের সাথে মিল রেখে */
+    border-radius: 22px;
+    z-index: -1;
+}
+
     
     body{
 overflow-x:hidden !important;
@@ -344,11 +385,365 @@ overflow-x:hidden !important;
     100% { content: '....'; }
 }
 
-        
+        .design-status {
+    position: absolute;
+    bottom: 390px; /* কার্ডের নিচ থেকে দূরত্ব */
+    left: 15px;   /* কার্ডের বাম দিক থেকে দূরত্ব */
+    background: rgba(255, 46, 126, 0.1);
+    padding: 3px 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 46, 126, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    backdrop-filter: blur(5px);
+    z-index: 50;
+    pointer-events: none; /* যাতে মাউস বা টাচ ইফেক্টে বাধা না দেয় */
+}
+
+.status-dot {
+    width: 5px;
+    height: 5px;
+    background: #00ff00;
+    border-radius: 50%;
+    box-shadow: 0 0 5px #00ff00;
+    animation: statusPulse 2s infinite;
+}
+
+.status-text {
+    font-size: 7px; /* সাইজ আরও ছোট করা হয়েছে */
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+@keyframes statusPulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+    
+    /* ফ্লোটিং হার্ট বাবল স্টাইল */
+.heart-bubble {
+    position: absolute;
+    bottom: -50px; /* স্ক্রিনের নিচ থেকে শুরু হবে */
+    color: rgba(255, 46, 126, 0.5); /* হালকা স্বচ্ছ পিঙ্ক */
+    font-size: 15px;
+    pointer-events: none;
+    z-index: 1; /* এটি যেন মেইন কার্ডের পেছনে থাকে */
+    animation: floatHeart var(--speed) linear forwards;
+}
+
+@keyframes floatHeart {
+    0% { 
+        transform: translateY(0) translateX(0) rotate(0deg); 
+        opacity: 0; 
+    }
+    20% { 
+        opacity: 0.8; 
+    }
+    80% { 
+        opacity: 0.8; 
+    }
+    100% { 
+        transform: translateY(-110vh) translateX(var(--randomX)) rotate(360deg); 
+        opacity: 0; 
+    }
+}
+
+    
+    /* ১. মেমোরি লেন প্যারালাক্স স্টাইল */
+.star, .balloon-container, .heart-bubble {
+    transition: transform 0.2s ease-out; /* নড়াচড়া মসৃণ করার জন্য */
+    will-change: transform;
+}
+
+/* ২. ব্যাকগ্রাউন্ডে একটি গভীরতা তৈরি করা */
+#decor-container {
+    perspective: 1000px;
+    overflow: hidden;
+}
+    
+    /* রাইট স্লাইডার স্টাইল */
+.right-slider {
+    position: fixed;
+    right: -220px; /* শুরুতে ভেতরে লুকানো থাকবে */
+    top: 20%;
+    transform: translateY(-50%);
+    width: 200px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 46, 126, 0.2);
+    border-radius: 20px 0 0 20px;
+    display: flex;
+    align-items: center;
+    transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 10000;
+}
+
+/* স্লাইডারের হ্যান্ডেল (যা বাইরে দেখা যাবে) */
+.slider-handle {
+    position: absolute;
+    left: -35px;
+    width: 35px;
+    height: 80px;
+    background: rgba(255, 46, 126, 0.2);
+    border: 1px solid rgba(255, 46, 126, 0.3);
+    border-right: none;
+    border-radius: 10px 0 0 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+}
+
+.slider-handle span {
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 2px;
+    line-height: 1.2;
+    text-align: center;
+}
+
+/* ভেতরে থাকা কন্টেন্ট */
+.slider-content {
+    padding: 20px;
+    width: 100%;
+    text-align: center;
+}
+
+.slider-content h4 {
+    font-size: 14px;
+    margin-bottom: 15px;
+    color: var(--soft-pink);
+    text-transform: uppercase;
+}
+
+.contact-btn {
+    display: block;
+    padding: 10px;
+    margin: 10px 0;
+    background: rgba(255, 46, 126, 0.2);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: 0.3s;
+}
+
+.contact-btn:hover {
+    background: var(--neon-pink);
+    box-shadow: 0 0 15px var(--neon-pink);
+}
+
+/* স্লাইডার ওপেন হলে যা হবে */
+.right-slider.open {
+    right: 0;
+}
+
+    .phase-tracker-mini {
+    position: fixed;
+    bottom: 45px; /* ফুটারের ঠিক উপরে */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 85%;
+    max-width: 320px;
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 46, 126, 0.15);
+    border-radius: 15px;
+    padding: 10px 12px;
+    z-index: 999;
+}
+
+.tracker-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.phase-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.status-dot {
+    width: 5px;
+    height: 5px;
+    background: #00ff00;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #00ff00;
+    animation: glow-pulse 2s infinite;
+}
+
+.admin-trigger {
+    background: none;
+    border: 1px solid rgba(255, 46, 126, 0.3);
+    color: var(--neon-pink);
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 9px;
+    cursor: pointer;
+}
+
+.progress-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.progress-track {
+    flex-grow: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #ff2e7e, #ff007f);
+    box-shadow: 0 0 10px var(--neon-pink);
+    position: relative;
+    transition: width 1s ease;
+}
+
+/* শিমার ইফেক্ট সংশোধন */
+.shimmer {
+    position: absolute;
+    top: 0; 
+    left: -100%; /* শুরুর পজিশন */
+    width: 100%; 
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255,255,255,0.6), 
+        transparent);
+    animation: shim 2.5s infinite linear;
+}
+
+/* টাইপিং মিস্টেক ঠিক করা হলো */
+@keyframes shim {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%; /* এখন এটি শেষ পর্যন্ত যাবে */
+    }
+}
+
+
+.perc-label { font-size: 8px; color: #fff; font-weight: bold; width: 25px; }
+
+.dot-stepper {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 0 2px;
+}
+
+.step-dot { width: 4px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+.step-dot.active { background: var(--neon-pink); box-shadow: 0 0 5px var(--neon-pink); }
+.step-dot.pulsing { animation: active-bounce 1.5s infinite; }
+
+/* Admin Overlay */
+.glass-admin-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 10001;
+}
+.admin-modal {
+    background: #0a0a0a; padding: 25px; border-radius: 20px; border: 1px solid var(--neon-pink);
+    text-align: center; width: 260px;
+}
+.admin-modal input, .admin-modal select {
+    width: 100%; padding: 10px; margin: 8px 0; background: #151515; border: 1px solid #333; color: white; border-radius: 10px; font-size: 12px;
+}
+.apply-btn { background: var(--neon-pink); color: white; border: none; padding: 10px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+.cancel-link { background: none; color: #555; border: none; font-size: 10px; margin-top: 15px; cursor: pointer; }
+
+@keyframes shim { 9100% { left: 100%; } }
+@keyframes glow-pulse { 50% { opacity: 0.4; } }
+@keyframes active-bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.6); } }
+
+    /* নিয়ন অরা ট্রেইল স্টাইল */
+.aura-trail {
+    position: fixed;
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle, var(--neon-pink) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none; /* যাতে ক্লিকে বাধা না দেয় */
+    z-index: 9998;
+    filter: blur(8px);
+    mix-blend-mode: screen;
+    opacity: 0.6;
+    animation: fadeAura 1s ease-out forwards;
+}
+
+@keyframes fadeAura {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(3); opacity: 0; }
+}
+
+    /* ডায়নামিক ব্যাকগ্রাউন্ড আভা স্টাইল */
+.bg-aura-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* এটি সবকিছুর পেছনে থাকবে */
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.bg-aura {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--aura-glow) 0%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.3;
+    animation: moveAura 20s infinite alternate ease-in-out;
+}
+
+.aura-1 { top: -10%; left: -10%; animation-duration: 25s; }
+.aura-2 { bottom: -10%; right: -10%; animation-duration: 30s; animation-delay: -5s; }
+
+@keyframes moveAura {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(20vw, 20vh) scale(1.2); }
+    100% { transform: translate(-10vw, 30vh) scale(0.9); }
+}
+.pi9 {
+    color: #ffffff !important; /* কালার বানান ঠিক করা হলো */
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* হালকা সাদা গ্লো */
+}
+
+   
+
     </style>
 </head>
 <body>
-    
+    <div class="bg-aura-container">
+    <div class="bg-aura aura-1"></div>
+    <div class="bg-aura aura-2"></div>
+</div>
+
     <header class="celestial-header" onclick="changeAura()">
         <div class="brand-zone">
             <span class="brand-top">Birthday Edition v.01</span>
@@ -366,14 +761,16 @@ overflow-x:hidden !important;
     </header>
  <div class="logo-under-header">
         <img src="https://raw.githubusercontent.com/blinkindiaofficial2-ai/My-image-/refs/heads/main/file_0000000026287208964fe46c324c213c.png" alt="Logo"> </div>
+    
 
     <div id="decor-container"></div>
+    
 
     <div class="container">
         
-        <h1>Rupsha's Birthday World Coming Soon<span class="dot-loader"></span></h1>
+        <h1>Rupsha's Birthday World<br><span class ="pi9">Coming Soon</span><span class="dot-loader"></span></h1>
+<p id="upload-text" class="pp" style="color: var(--soft-pink); letter-spacing: 2px; margin: 10px 0; min-height: 1.2em;"></p>
 
-        <p class="pp" style="color: var(--soft-pink); letter-spacing: 2px; margin: 10px 0;">Official Launch on February 11th 2027</p>
         
         <div class="countdown-wrapper">
             <div class="circle-container">
@@ -393,9 +790,221 @@ overflow-x:hidden !important;
                 <div class="text-box"><span id="seconds" class="number">00</span><span class="label">Secs</span></div>
             </div>
         </div>
+        
+        
+       
+            
+            
+        </div>
+
+    </div>
+    <div class="right-slider" id="contactSlider">
+    <div class="slider-handle" onclick="toggleSlider()">
+        <span></span>
+    </div>
+    <div class="slider-content">
+        <h4>contract us.</h4>
+        <a href="mailto: piyascharbortty@gmail.com" class="contact-btn">Email Me</a>
+        <a href="https://t.me/piyaspro" class="contact-btn wa" colour ="#0088CC">telegram</a>
+    </div>
+</div>
+<div class="phase-tracker-mini">
+    <div class="tracker-top">
+        <div class="phase-info">
+            <span class="status-dot"></span>
+            <span id="phase-display">Phase 3: Interactive Sections</span>
+        </div>
+        <button class="admin-trigger" onclick="openAdmin()">i</button>
     </div>
 
+    <div class="progress-area">
+        <div class="progress-track">
+            <div id="progress-fill" class="progress-bar" style="width: 55%;">
+                <div class="shimmer"></div>
+            </div>
+        </div>
+        <span id="perc-display" class="perc-label">55%</span>
+    </div>
+
+    <div class="dot-stepper" id="dots-group">
+        <div class="step-dot active"></div>
+        <div class="step-dot active"></div>
+        <div class="step-dot active pulsing"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+    </div>
+</div>
+
+<div id="adminPanel" class="glass-admin-overlay">
+    <div class="admin-modal">
+        <h3>System Access</h3>
+        <p id="adminMsg">Enter Secure Key</p>
+        <input type="password" id="passInput" placeholder="••••••••">
+        
+        <div id="controlPanel" style="display:none;">
+            <select id="phaseSelect">
+                <option value="1">Phase 1: Initial Draft</option>
+                <option value="2">Phase 2: Visual Redesign</option>
+                <option value="3" selected>Phase 3: Interactive Sections</option>
+                <option value="4">Phase 4: Responsive Tuning</option>
+                <option value="5">Phase 5: Performance Optimization</option>
+                <option value="6">Phase 6: Live Deployment</option>
+            </select>
+            <input type="number" id="percInput" placeholder="Work % (0-100)">
+            <button class="apply-btn" onclick="applyUpdate()">Save Changes</button>
+        </div>
+        
+        <button id="loginBtn" class="apply-btn" onclick="checkPass()">Unlock</button>
+        <button class="cancel-link" onclick="closeAdmin()">Cancel</button>
+    </div>
+</div>
+
+
     <script>
+const uploadElement = document.getElementById('upload-text');
+const uploadMsg = "uplode on February 11th 2027"; // আপনার লেখাটি এখানে থাকলো
+let uploadIndex = 0;
+
+function typeUploadText() {
+    if (uploadIndex < uploadMsg.length) {
+        uploadElement.innerHTML += uploadMsg.charAt(uploadIndex);
+        uploadIndex++;
+        setTimeout(typeUploadText, 100); // টাইপিংয়ের গতি (১০০ মিলিসেকেন্ড)
+    }
+}
+
+// এটি নিশ্চিত করবে যে পেজ লোড হওয়ার পর টাইপিং শুরু হবে
+document.addEventListener('DOMContentLoaded', () => {
+    // যদি আপনার আগে থেকে কোনো DOMContentLoaded থাকে, তবে শুধু নিচের লাইনটি সেখানে বসান
+    setTimeout(typeUploadText, 1500); // পেজ খোলার ১.৫ সেকেন্ড পর টাইপিং শুরু হবে
+});
+
+
+
+    // Firebase কনফিগারেশন
+const firebaseConfig = {
+  apiKey: "AIzaSyDQXo1mNub7_MxV372XCC0f5S1Yx5Vu_C4",
+  authDomain: "admin-panel-d7fc3.firebaseapp.com",
+  projectId: "admin-panel-d7fc3",
+  databaseURL: "https://admin-panel-d7fc3-default-rtdb.firebaseio.com",
+  storageBucket: "admin-panel-d7fc3.firebasestorage.app",
+  messagingSenderId: "112847693516",
+  appId: "1:112847693516:web:21d7925c12471cf7eb8469"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// পেজ লোড হওয়ার সময় ডেটাবেস থেকে বর্তমান অবস্থা নিয়ে আসা
+window.addEventListener('DOMContentLoaded', () => {
+    database.ref('tracker').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if(data) {
+            // UI আপডেট ফাংশন কল করা
+            renderTracker(data.phaseText, data.percentage, data.phaseNum);
+        }
+    });
+});
+
+// UI আপডেট করার মূল ফাংশন
+function renderTracker(text, perc, num) {
+    document.getElementById('phase-display').innerText = text;
+    document.getElementById('perc-display').innerText = perc + "%";
+    document.getElementById('progress-fill').style.width = perc + "%";
+
+    const dots = document.querySelectorAll('.step-dot');
+    dots.forEach((dot, idx) => {
+        dot.classList.remove('active', 'pulsing');
+        if (idx < num) dot.classList.add('active');
+        if (idx == num - 1) dot.classList.add('pulsing');
+    });
+}
+
+    
+    
+    
+    const ACCESS_KEY = "98839"; 
+
+function openAdmin() { document.getElementById('adminPanel').style.display = 'flex'; }
+function closeAdmin() { 
+    document.getElementById('adminPanel').style.display = 'none'; 
+    document.getElementById('passInput').value = "";
+}
+
+function checkPass() {
+    if(document.getElementById('passInput').value === ACCESS_KEY) {
+        document.getElementById('adminMsg').innerText = "Access Granted";
+        document.getElementById('passInput').style.display = 'none';
+        document.getElementById('loginBtn').style.display = 'none';
+        document.getElementById('controlPanel').style.display = 'block';
+    } else { alert("Unauthorized Access!"); }
+}
+
+function applyUpdate() {
+    const pNum = document.getElementById('phaseSelect').value;
+    const pText = document.getElementById('phaseSelect').options[document.getElementById('phaseSelect').selectedIndex].text;
+    const pVal = document.getElementById('percInput').value;
+
+    if(pVal < 0 || pVal > 100 || pVal === "") { 
+        alert("Invalid Percentage"); 
+        return; 
+    }
+
+    // Firebase-এ ডেটা সেভ করা
+    database.ref('tracker').set({
+        phaseNum: pNum,
+        phaseText: pText,
+        percentage: pVal
+    }).then(() => {
+        closeAdmin(); // সেভ হয়ে গেলে প্যানেল বন্ধ হবে
+    }).catch((error) => {
+        alert("Error saving data: " + error.message);
+    });
+}
+
+    
+    
+    // "The Memory Lane" প্যারালাক্স ইঞ্জিন
+document.addEventListener('mousemove', (e) => {
+    const x = (window.innerWidth / 2 - e.pageX) / 50;
+    const y = (window.innerHeight / 2 - e.pageY) / 50;
+
+    // ১. তারাগুলো খুব ধীরে নড়বে (ব্যাকগ্রাউন্ড)
+    document.querySelectorAll('.star').forEach(star => {
+        star.style.transform = `translateX(${x * 0.5}px) translateY(${y * 0.5}px)`;
+    });
+
+    // ২. বেলুন এবং হার্টগুলো একটু দ্রুত নড়বে (ফোরগ্রাউন্ড)
+    document.querySelectorAll('.balloon-container, .heart-bubble').forEach(item => {
+        item.style.transform = `translateX(${x * 1.5}px) translateY(${y * 1.2}px)`;
+    });
+    
+    // ৩. মেইন কার্ডটি হালকা টিল্ট হবে
+    const card = document.querySelector('.container');
+    if(card) {
+        card.style.transform = `rotateY(${-x * 0.2}deg) rotateX(${y * 0.2}deg)`;
+    }
+});
+
+// মোবাইল ইউজারদের জন্য (Tilt ইফেক্ট)
+if (window.DeviceOrientationEvent) {
+    window.addEventListener('deviceorientation', (e) => {
+        const tiltX = e.gamma / 10; // Left-to-Right
+        const tiltY = e.beta / 10;  // Front-to-Back
+        
+        document.querySelectorAll('.star').forEach(star => {
+            star.style.transform = `translateX(${tiltX * 2}px) translateY(${tiltY * 2}px)`;
+        });
+        
+        document.querySelectorAll('.balloon-container, .heart-bubble').forEach(item => {
+            item.style.transform = `translateX(${tiltX * 5}px) translateY(${tiltY * 5}px)`;
+        });
+    });
+}
+
+    
         // বার্থডে থিম ইঞ্জিন
         let currentMode = 0;
         const modes = [
@@ -516,8 +1125,88 @@ function createMagic(e) {
         setTimeout(() => p.remove(), 1200);
     }
 }
+            
+            
+            // ফ্লোটিং হার্ট বাবল তৈরি করার ফাংশন
+function createHeartBubble() {
+    const heart = document.createElement('div');
+    heart.className = 'heart-bubble';
+    
+    // বিভিন্ন রকমের হার্ট ইমোজি র্যান্ডমলি আসবে
+    const heartIcons = ['💖', '❤️', '🌸'];
+    heart.innerHTML = heartIcons[Math.floor(Math.random() * heartIcons.length)];
+    
+    // হার্টটি স্ক্রিনের কত দূরে থাকবে (বাম থেকে ডানে)
+    heart.style.left = Math.random() * 100 + 'vw';
+    
+    // হার্টটি কত দ্রুত ওপরে উঠবে (১০ থেকে ২০ সেকেন্ডের মধ্যে)
+    heart.style.setProperty('--speed', (Math.random() * 10 + 10) + 's');
+    
+    // হার্টটি ওপরে ওঠার সময় কতটা আঁকাবাঁকা হবে
+    heart.style.setProperty('--randomX', (Math.random() * 200 - 100) + 'px');
+    
+    // হার্টের সাইজ র্যান্ডমলি ১০ থেকে ২০ পিক্সেল হবে
+    heart.style.fontSize = (Math.random() * 10 + 12) + 'px';
+    
+    document.body.appendChild(heart);
+    
+    // ২০ সেকেন্ড পর হার্টটি মেমোরি থেকে মুছে যাবে
+    setTimeout(() => {
+        heart.remove();
+    }, 20000);
+}
+
+// প্রতি ১.৫ সেকেন্ডে একটি করে নতুন হার্ট তৈরি হবে
+setInterval(createHeartBubble, 1500);
+
+           function toggleSlider() {
+    const slider = document.getElementById('contactSlider');
+    slider.classList.toggle('open');
+}
+
+// স্ক্রিনের অন্য কোথাও ক্লিক করলে স্লাইডারটি নিজে থেকেই বন্ধ হয়ে যাবে
+document.addEventListener('click', function(event) {
+    const slider = document.getElementById('contactSlider');
+    const isClickInside = slider.contains(event.target);
+
+    if (!isClickInside && slider.classList.contains('open')) {
+        slider.classList.remove('open');
+    }
+}, true);
+            
+            
+            
+// নিয়ন অরা ট্রেইল তৈরি করার ফাংশন
+function createAura(e) {
+    const aura = document.createElement('div');
+    aura.className = 'aura-trail';
+    
+    // মাউস বা টাচ পজিশন সেট করা
+    const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+    const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+    
+    aura.style.left = (x - 15) + 'px';
+    aura.style.top = (y - 15) + 'px';
+    
+    document.body.appendChild(aura);
+    
+    // ১ সেকেন্ড পর এলিমেন্টটি মুছে ফেলা
+    setTimeout(() => {
+        aura.remove();
+    }, 1000);
+}
+
+// মাউস মুভমেন্ট এবং টাচ মুভমেন্টে অরা তৈরি হবে
+document.addEventListener('mousemove', createAura);
+document.addEventListener('touchmove', (e) => {
+    createAura(e.touches[0]);
+}, {passive: true});
+
 
     </script>
+            
+            
+            
              <footer style="
     position: fixed; 
     bottom: 10px; 
@@ -545,6 +1234,5 @@ function createMagic(e) {
         <span style="font-weight: 700; color: #fff; border-bottom: 1px solid rgba(255, 0, 127, 0.5);">💖 PIYAS</span>
     </p>
 </footer>
-
 </body>
 </html>
